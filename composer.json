@@ -1,0 +1,19 @@
+{
+    "name": "bileji/validator"
+    "description": "data validator",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "shuc324",
+            "email": "shuc324@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "5.6.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Validator\\": "validator"    
+        }    
+    }
+}
