@@ -46,6 +46,8 @@ class BidirectionalValidator extends Validator implements ValidatorInterface
                 $this->cacheData = array_merge_recursive($this->cacheData, $map);
                 array_push($this->compactCacheData, implode(self::HIERARCHY_DELIMITER, $pieces));
             }
+            var_dump($validator, $args);
+            // 此处需要一个递归来处理
             //$this->callValidator($validator, $args);
         }
 
@@ -105,14 +107,14 @@ $validator = new BidirectionalValidator();
 $validator->execute([
     'name' => 'shuchao',
     'password' => '123',
-    'attr.sex' => 'man',
-    'attr.name.ljlj' => 'ts',
-    'attr.page' => 'ts',
+    'attr._.sex' => 'man',
+    'attr._.name.ljlj' => 'ts',
+    'attr._.page' => 'ts',
 ], [
     'name' => 'string',
     'password' => 'string',
-    'attr.sex' => 'string',
-    'attr.name.ljlj' => 'string'
+    'attr._.sex.oo' => 'string',
+    'attr._.name.xx' => 'string'
 ]);
 
 //var_dump($validator->getRules(), $validator->getCacheData());

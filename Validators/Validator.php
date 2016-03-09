@@ -69,7 +69,6 @@ class Validator
     {
         $map = []; $mapStr = '$map';
         array_map(function($key) use (&$mapStr) {
-            $key = $key === '_' ? 0 : $key;
             $mapStr .= '[\'' . (is_numeric($key) ? intval($key) : $key) . '\']';
         }, $keys);
         eval($mapStr . '=' . (empty($value) ? '[\'\']' : $value) . ';');
