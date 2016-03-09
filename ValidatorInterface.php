@@ -4,12 +4,8 @@ namespace Bileji\Validator;
 
 interface ValidatorInterface
 {
-
-    // 语法解析
-    private function parse(array $rules);
-    
     // 执行验证 
-    public function execute(array $expressions);
+    public function execute(array $data, array $expressions);
     
     // 状态码
     public function getCode();
