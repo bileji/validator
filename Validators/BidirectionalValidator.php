@@ -12,7 +12,6 @@ use Bileji\Validator\ValidatorInterface;
 
 class BidirectionalValidator extends Validator implements ValidatorInterface
 {
-    const NORMAL_VALIDATION = 1;
 
     public function execute(array $pendingData, array $expressions)
     {
