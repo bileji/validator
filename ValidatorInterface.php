@@ -6,7 +6,7 @@ interface ValidatorInterface
 {
     // 执行验证 
     public function execute(array $data, array $expressions);
-    
+
     // 状态码
     public function getCode();
 

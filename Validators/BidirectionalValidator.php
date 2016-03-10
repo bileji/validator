@@ -17,14 +17,14 @@ class BidirectionalValidator extends Validator implements ValidatorInterface
     public function execute(array $pendingData, array $expressions)
     {
         $this->parse($expressions);
-        foreach($pendingData as $field => $value) {
+        foreach ($pendingData as $field => $value) {
             if (empty($field)) {
                 throw new ValidatorException('语法错误');
             }
             if (!isset($this->rules[$field])) {
                 continue;
             }
-            switch(is_array($value)) {
+            switch (is_array($value)) {
                 case false:
                     $this->normalValidator($field, $value);
                     break;
@@ -36,6 +36,19 @@ class BidirectionalValidator extends Validator implements ValidatorInterface
         return $this;
     }
 
+    // 普通验证器
+    protected function normalValidator($field, $value)
+    {
+        $this->field = $field;
+        foreach ($this->rules[$this->field][self::VALIDATOR_CONTAINER] as $validator => $args) {
+            if (!isset($this->cacheData[$this->field])) {
+                $this->cacheData[$this->field] = $value;
+            }
+            array_unshift($args, $this->cacheData[$this->field]);
+            $this->callValidator($validator, $args);
+        }
+    }
+
     // 字典验证器
     protected function mapValidator($value, $rules)
     {
@@ -44,7 +57,7 @@ class BidirectionalValidator extends Validator implements ValidatorInterface
                 $rules = current($rules);
                 if (preg_match('/^\d*$/', implode('', array_keys($value)))) {
                     array_map(function ($one) use ($rules) {
-                        array_walk($rules, function($item, $k) use ($one) {
+                        array_walk($rules, function ($item, $k) use ($one) {
                             if (isset($one[$k])) {
                                 $this->mapValidator($one[$k], $item);
                             } else {
@@ -65,26 +78,13 @@ class BidirectionalValidator extends Validator implements ValidatorInterface
                 }
             }
         } else if (isset($rules[self::VALIDATOR_CONTAINER])) {
-            foreach($rules[self::VALIDATOR_CONTAINER] as $validator => $args) {
+            foreach ($rules[self::VALIDATOR_CONTAINER] as $validator => $args) {
                 $this->field = is_array($rules[self::VALIDATOR_SYNTAX]) ? array_shift($rules[self::VALIDATOR_SYNTAX]) : $rules[self::VALIDATOR_SYNTAX];
                 array_unshift($args, $value);
                 $this->callValidator($validator, $args);
             }
         } else {
             throw new ValidatorException('语法错误');
-        }
-    }
-
-    // 普通验证器
-    protected function normalValidator($field, $value)
-    {
-        $this->field = $field;
-        foreach ($this->rules[$this->field][self::VALIDATOR_CONTAINER] as $validator => $args) {
-            if (!isset($this->cacheData[$this->field])) {
-                $this->cacheData[$this->field] = $value;
-            }
-            array_unshift($args, $this->cacheData[$this->field]);
-            $this->callValidator($validator, $args);
         }
     }
 
