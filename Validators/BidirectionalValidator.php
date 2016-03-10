@@ -18,19 +18,18 @@ class BidirectionalValidator extends Validator implements ValidatorInterface
     {
         $this->parse($expressions);
         foreach($pendingData as $field => $value) {
-            $pieces = explode(self::HIERARCHY_DELIMITER, $field);
-            if (empty($pieces)) {
+            if (empty($field)) {
                 throw new ValidatorException('语法错误');
             }
-            if (!isset($this->rules[$pieces[0]])) {
+            if (!isset($this->rules[$field])) {
                 continue;
             }
-            switch(count($pieces)) {
-                case self::NORMAL_VALIDATION:
+            switch(is_array($value)) {
+                case false:
                     $this->normalValidator($field, $value);
                     break;
                 default:
-                    $this->mapValidator($pieces, $value);
+                    $this->mapValidator($value, $this->rules[array_shift(explode(self::HIERARCHY_DELIMITER, $field))]);
                     break;
             }
         }
@@ -38,42 +37,53 @@ class BidirectionalValidator extends Validator implements ValidatorInterface
     }
 
     // 字典验证器
-    protected function mapValidator($pieces, $value)
+    protected function mapValidator($value, $rules)
     {
-        $map = $this->reverse($pieces, $value);
-        foreach ($this->rules[$pieces[0]] as $validator => $args) {
-            if (!in_array(implode(self::HIERARCHY_DELIMITER, $pieces), $this->compactCacheData)) {
-                $this->cacheData = array_merge_recursive($this->cacheData, $map);
-                array_push($this->compactCacheData, implode(self::HIERARCHY_DELIMITER, $pieces));
+        if (is_array($rules) && !isset($rules[self::VALIDATOR_CONTAINER])) {
+            if (isset($rules[self::LIST_ARRAY_MARK]) && $value != self::PARAM_NULL) {
+                $rules = current($rules);
+                if (preg_match('/^\d*$/', implode('', array_keys($value)))) {
+                    array_map(function ($one) use ($rules) {
+                        array_walk($rules, function($item, $k) use ($one) {
+                            if (isset($one[$k])) {
+                                $this->mapValidator($one[$k], $item);
+                            } else {
+                                $this->mapValidator(self::PARAM_NULL, $item);
+                            }
+                        });
+                    }, $value);
+                } else {
+                    $this->mapValidator(self::PARAM_NULL, $rules);
+                }
+            } else {
+                foreach ($rules as $k => $v) {
+                    if (isset($value[$k])) {
+                        $this->mapValidator($value[$k], $v);
+                    } else {
+                        $this->mapValidator(self::PARAM_NULL, $v);
+                    }
+                }
             }
-            var_dump($validator, $args);
-            // 此处需要一个递归来处理
-            //$this->callValidator($validator, $args);
+        } else if (isset($rules[self::VALIDATOR_CONTAINER])) {
+            foreach($rules[self::VALIDATOR_CONTAINER] as $validator => $args) {
+                $this->field = is_array($rules[self::VALIDATOR_SYNTAX]) ? array_shift($rules[self::VALIDATOR_SYNTAX]) : $rules[self::VALIDATOR_SYNTAX];
+                array_unshift($args, $value);
+                $this->callValidator($validator, $args);
+            }
+        } else {
+            throw new ValidatorException('语法错误');
         }
-
-//        [
-//            'attr' => [
-//                'sex' => [
-//                    'int' => []
-//                ],
-//                'name' => [
-//                    'string' => []
-//                ]
-//            ]
-//        ]
-
     }
-
-
 
     // 普通验证器
     protected function normalValidator($field, $value)
     {
         $this->field = $field;
         foreach ($this->rules[$this->field][self::VALIDATOR_CONTAINER] as $validator => $args) {
-            if(!isset($this->cacheData[$this->field])) {
+            if (!isset($this->cacheData[$this->field])) {
                 $this->cacheData[$this->field] = $value;
             }
+            array_unshift($args, $this->cacheData[$this->field]);
             $this->callValidator($validator, $args);
         }
     }
@@ -88,33 +98,36 @@ class BidirectionalValidator extends Validator implements ValidatorInterface
 
     }
 
-    // test
-    public function getCacheData()
-    {
-        return $this->cacheData;
-    }
-
-    public function getRules()
-    {
-        return $this->rules;
-    }
 }
-
-
 
 $validator = new BidirectionalValidator();
 
 $validator->execute([
-    'name' => 'shuchao',
+    'name' => 'shu c',
     'password' => '123',
-    'attr._.sex' => 'man',
-    'attr._.name.ljlj' => 'ts',
-    'attr._.page' => 'ts',
+    'attr' => [
+        [
+            'time' => '2016-11-02',
+            'price' => 111
+        ], [
+            'time' => '2016-11-01',
+            'price' => 222
+        ], [
+            'time' => '2016-11-01',
+            'price' => 333,
+        ]
+    ],
+    'student' => [
+        'class' => [
+
+        ]
+    ]
 ], [
     'name' => 'string',
     'password' => 'string',
-    'attr._.sex.oo' => 'string',
-    'attr._.name.xx' => 'string'
+    'attr._.time' => 'int',
+    'attr._.price' => 'string',
+    'attr._.sweet._.one' => 'string',
+    'attr._.sweet._.two' => 'string',
+    'student.class.grad' => 'int|string'
 ]);
-
-//var_dump($validator->getRules(), $validator->getCacheData());
