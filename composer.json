@@ -1,5 +1,5 @@
 {
-    "name": "bileji/validator"
+    "name": "bileji/validator",
     "description": "data validator",
     "license": "MIT",
     "authors": [
@@ -13,7 +13,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Bileji\\Validator\\": ""    
-        }    
+            "Bileji\\Validator\\": ""
+        }
     }
 }
