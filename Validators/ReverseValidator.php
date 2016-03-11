@@ -10,7 +10,7 @@ require "./Validator.php";
 use Bileji\Validator\ValidatorException;
 use Bileji\Validator\ValidatorInterface;
 
-class BidirectionalValidator extends Validator implements ValidatorInterface
+class ReverseValidator extends Validator implements ValidatorInterface
 {
 
     public function execute(array $pendingData, array $expressions)
@@ -99,7 +99,7 @@ class BidirectionalValidator extends Validator implements ValidatorInterface
 
 }
 
-$validator = new BidirectionalValidator();
+$validator = new ReverseValidator();
 
 $validator->execute([
     'name' => 'shu c',

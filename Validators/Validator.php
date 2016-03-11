@@ -30,14 +30,12 @@ abstract class Validator
 
     protected $cacheData = [];
 
-    protected function reverse(array $keys, $value)
+    protected function reverse(array $keys, $value, $eval = '$map', $map = [])
     {
-        $map = [];
-        $mapStr = '$map';
-        array_map(function ($key) use (&$mapStr) {
-            $mapStr .= '[\'' . (is_numeric($key) ? intval($key) : $key) . '\']';
+        array_map(function ($key) use (&$eval) {
+            $eval .= '[\'' . (is_numeric($key) ? intval($key) : $key) . '\']';
         }, $keys);
-        eval($mapStr . '=' . (empty($value) ? '[\'\']' : $value) . ';');
+        eval($eval . '=' . (empty($value) ? '[\'\']' : '\'' . $value . '\'') . ';');
         return $map;
     }
 
@@ -47,13 +45,27 @@ abstract class Validator
         return 'validator' . ucfirst(strval($validator));
     }
 
+    protected function syntaxPush(&$syntax, $field)
+    {
+        return $syntax .= self::HIERARCHY_DELIMITER . $field;
+    }
+
+    protected function syntaxPop(&$syntax)
+    {
+        $pieces = explode(self::HIERARCHY_DELIMITER, $syntax);
+        array_pop($pieces);
+        return $syntax = implode(self::HIERARCHY_DELIMITER, $pieces);
+    }
+
     // 调取验证器
-    protected function callValidator($validator, $args)
+    protected function callValidator($validator, $args, $syntax)
     {
         if (method_exists($this, $this->getValidatorName($validator))) {
             $value = call_user_func_array([$this, $this->getValidatorName($validator)], $args);
+            $value = empty($value) ? array_shift($args) : $value;
+            # 结果为空的数据视为不通过验证
             if (!empty($value)) {
-                $this->cacheData[$this->field] = $value;
+                $this->reverse(explode(self::HIERARCHY_DELIMITER, $syntax), $value, '$this->cacheData', $this->cacheData);
             }
         } else {
             throw new ValidatorException('验证器' . $validator . '缺失');
@@ -69,7 +81,7 @@ abstract class Validator
                 $validatorAndParameters = explode(self::VALIDATOR_OF_PARAMETERS_DELIMITER, $validator);
                 if (strpos($field, self::HIERARCHY_DELIMITER) !== false) {
                     $rule = $this->reverse(explode(self::HIERARCHY_DELIMITER, $field . self::HIERARCHY_DELIMITER . self::VALIDATOR_CONTAINER . self::HIERARCHY_DELIMITER . array_shift($validatorAndParameters)), array_pop($validatorAndParameters));
-                    $syntax = $this->reverse(explode(self::HIERARCHY_DELIMITER, $field . self::HIERARCHY_DELIMITER . self::VALIDATOR_SYNTAX), '\'' . $field . '\'');
+                    $syntax = $this->reverse(explode(self::HIERARCHY_DELIMITER, $field . self::HIERARCHY_DELIMITER . self::VALIDATOR_SYNTAX),  $field);
                     $this->rules = array_merge_recursive($this->rules, $rule, $syntax);
                 } else {
                     $this->rules[$field][self::VALIDATOR_CONTAINER][array_shift($validatorAndParameters)] = explode(self::PARAMETERS_DELIMITER, array_pop($validatorAndParameters));
@@ -78,10 +90,7 @@ abstract class Validator
         });
     }
 
-
-    /******************************************** validator ********************************************/
-
-    protected function validatorInt()
+    protected function validatorInt($value)
     {
 
     }
@@ -96,9 +105,9 @@ abstract class Validator
 
     }
 
-    protected function validatorString()
+    protected function validatorString($value)
     {
-        var_dump($this->field);
+
     }
 
     protected function validatorRequired()
