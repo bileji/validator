@@ -1,67 +1,11 @@
 <?php
 
-namespace Bileji\Validator\Validators;
+namespace Bileji\Validator;
 
 use ReflectionMethod;
-use Bileji\Validator\ValidatorException;
 
-abstract class Validator
+class Validation extends Validator implements ValidatorInterface
 {
-    const PARAM_NULL = null;
-
-    const LIST_ARRAY_MARK = '_';
-
-    const VALIDATOR_DELIMITER = '|';
-
-    const HIERARCHY_DELIMITER = '.';
-
-    const PARAMETERS_DELIMITER = ',';
-
-    const VALIDATOR_OF_PARAMETERS_DELIMITER = ':';
-
-    const VALIDATOR_ARGS = 'args';
-
-    const VALIDATOR_SYNTAX = 'syntax';
-
-    const VALIDATOR_CONTAINER = 'validator';
-
-    const VALIDATOR_CODE_LABEL = 'code';
-
-    const VALIDATOR_MESSAGE_LABEL = 'message';
-
-    protected $field;
-
-    protected $rules = [];
-
-    protected $cacheData = [];
-
-    protected $validatorName = '';
-
-    protected $errorMessages = [];
-
-    protected $defaultMessagesTemplate = [
-        'map' => [
-            self::VALIDATOR_CODE_LABEL => -50001,
-            self::VALIDATOR_MESSAGE_LABEL => '字段:field的值:value为非字典'
-        ],
-        'list' => [
-            self::VALIDATOR_CODE_LABEL => -50002,
-            self::VALIDATOR_MESSAGE_LABEL => '字段:field的值:value为非列表'
-        ],
-        'string' => [
-            self::VALIDATOR_CODE_LABEL => -50003,
-            self::VALIDATOR_MESSAGE_LABEL => '字段:field的值:value为非整型'
-        ],
-        'numeric' => [
-            self::VALIDATOR_CODE_LABEL => -50004,
-            self::VALIDATOR_MESSAGE_LABEL => '字段:field的值:value为非字符串'
-        ],
-        'required' => [
-            self::VALIDATOR_CODE_LABEL => -50005,
-            self::VALIDATOR_MESSAGE_LABEL => '字段:field为必填字段'
-        ],
-    ];
-
     protected function reverse(array $keys, $value, $eval = '$map', $map = [])
     {
         array_map(function ($key) use (&$eval) {
@@ -128,6 +72,85 @@ abstract class Validator
         });
     }
 
+    public function execute(array $pendingData, array $expressions)
+    {
+        $this->parse($expressions);
+        foreach ($pendingData as $field => $value) {
+            if (empty($field)) {
+                throw new ValidatorException('语法错误');
+            }
+            if (!isset($this->rules[$field])) {
+                continue;
+            }
+            switch (is_array($value)) {
+                case false:
+                    $this->normalValidator($field, $value, $field);
+                    break;
+                default:
+                    $mark = array_shift(explode(self::HIERARCHY_DELIMITER, $field));
+                    $this->mapValidator($value, $this->rules[$mark], $mark);
+                    break;
+            }
+        }
+        return $this;
+    }
+
+    // 普通验证器
+    protected function normalValidator($field, $value, $syntax)
+    {
+        $this->field = $field;
+        foreach ($this->rules[$this->field][self::VALIDATOR_CONTAINER] as $validator => $args) {
+            array_unshift($args, $value);
+            $this->callValidator($validator, $args, $syntax);
+        }
+    }
+
+    // 字典验证器
+    protected function mapValidator($value, $rules, $syntax)
+    {
+        if (is_array($rules) && !isset($rules[self::VALIDATOR_CONTAINER])) {
+            if (isset($rules[self::LIST_ARRAY_MARK])) {
+                $rules = current($rules);
+            }
+            if ($value != self::PARAM_NULL) {
+                if (preg_match('/^\d*$/', implode('', array_keys($value)))) {
+                    foreach($value as $n => $one) {
+                        $this->syntaxPush($syntax, $n);
+                        array_walk($rules, function ($item, $k) use ($one, $syntax) {
+                            $this->syntaxPush($syntax, $k);
+                            if (isset($one[$k])) {
+                                $this->mapValidator($one[$k], $item, $syntax);
+                            } else {
+                                $this->mapValidator(self::PARAM_NULL, $item, $syntax);
+                            }
+                        });
+                        $this->syntaxPop($syntax);
+                    }
+                } else {
+                    $this->mapValidator(self::PARAM_NULL, $rules, $syntax);
+                }
+            } else {
+                foreach ($rules as $k => $v) {
+                    $this->syntaxPush($syntax, $k);
+                    if (isset($value[$k])) {
+                        $this->mapValidator($value[$k], $v, $syntax);
+                    } else {
+                        $this->mapValidator(self::PARAM_NULL, $v, $syntax);
+                    }
+                    $this->syntaxPop($syntax);
+                }
+            }
+        } else if (isset($rules[self::VALIDATOR_CONTAINER])) {
+            foreach ($rules[self::VALIDATOR_CONTAINER] as $validator => $args) {
+                $this->field = is_array($rules[self::VALIDATOR_SYNTAX]) ? array_shift($rules[self::VALIDATOR_SYNTAX]) : $rules[self::VALIDATOR_SYNTAX];
+                array_unshift($args, $value);
+                $this->callValidator($validator, $args, $syntax);
+            }
+        } else {
+            throw new ValidatorException('语法错误');
+        }
+    }
+
     // 组装用户自定义消息
     protected function assembleCustomMessage($args)
     {
@@ -143,29 +166,19 @@ abstract class Validator
         ];
     }
 
-
-    protected function validatorMap($value)
+    public function withMessage()
     {
-        return is_array($value) && !preg_match('/^\d*$/', implode('', array_keys($value))) ? $value : null;
+
     }
 
-    protected function validatorList($value)
+    public function getCode()
     {
-        return is_array($value) && preg_match('/^\d*$/', implode('', array_keys($value))) ? $value : null;
+
     }
 
-    protected function validatorString($value)
+    public function getMessage()
     {
-        return is_string($value) ? $value : null;
+        return $this->errorMessages;
     }
 
-    protected function validatorNumeric($value)
-    {
-        return is_numeric($value) ? $value : null;
-    }
-
-    protected function validatorRequired($value)
-    {
-        return !empty($value) ? $value : null;
-    }
 }
