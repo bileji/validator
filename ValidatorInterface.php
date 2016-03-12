@@ -12,4 +12,7 @@ interface ValidatorInterface
 
     // 状态信息
     public function getMessage();
+
+    // 自定义提示消息
+    public function withMessage();
 }

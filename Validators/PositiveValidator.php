@@ -99,6 +99,11 @@ class PositiveValidator extends Validator implements ValidatorInterface
 
     public function getMessage()
     {
+        return $this->errorMessages;
+    }
+
+    public function withMessage()
+    {
 
     }
 
@@ -129,15 +134,19 @@ $validator->execute([
         'class' => [
 
         ]
+    ],
+    'test' => [
+        'xxx' => 0
     ]
 ], [
     'name' => 'string',
     'password' => 'string',
-    'attr._.time' => 'int',
+    'attr._.time' => 'string',
     'attr._.price' => 'string',
-    'attr._.sweet._.one' => 'string',
+    'attr._.sweet._.one' => 'required|string',
     'attr._.sweet._.two' => 'string',
-    'student.class.grad' => 'string'
+    'student.class.grad' => 'string',
+    'test' => 'map'
 ]);
 
-var_dump($validator->getCacheData());
+var_dump(json_encode($validator->getMessage()));
