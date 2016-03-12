@@ -47,11 +47,11 @@ abstract class ValidatorHeader
         ],
         'string' => [
             self::VALIDATOR_CODE_LABEL => -50003,
-            self::VALIDATOR_MESSAGE_LABEL => '字段:field的值:value为非整型'
+            self::VALIDATOR_MESSAGE_LABEL => '字段:field的值:value为非字符串'
         ],
         'numeric' => [
             self::VALIDATOR_CODE_LABEL => -50004,
-            self::VALIDATOR_MESSAGE_LABEL => '字段:field的值:value为非字符串'
+            self::VALIDATOR_MESSAGE_LABEL => '字段:field的值:value为非整型'
         ],
         'required' => [
             self::VALIDATOR_CODE_LABEL => -50005,
