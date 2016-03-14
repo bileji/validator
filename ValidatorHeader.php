@@ -44,6 +44,8 @@ abstract class ValidatorHeader
 
     protected $errorMessages = [];
 
+    protected $customMessages = [];
+
     protected $defaultMessagesTemplate = [
         'map' => [
             self::VALIDATOR_CODE_LABEL => -50001,

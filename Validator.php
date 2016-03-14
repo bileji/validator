@@ -19,6 +19,21 @@ class Validator extends ValidatorHeader implements ValidatorInterface
         }
     }
 
+    public function fails()
+    {
+        return $this->fail;
+    }
+
+    public function errors()
+    {
+        return $this->errors;
+    }
+
+    public function getData()
+    {
+        return $this->cacheData;
+    }
+
     // 反向构造数据
     protected function reverse(array $keys, $value, $eval = '$map', $map = [])
     {
@@ -63,7 +78,17 @@ class Validator extends ValidatorHeader implements ValidatorInterface
     // 自定义消息
     public function withMessage(array $messages)
     {
-        array_merge_recursive($this->defaultMessagesTemplate, $messages);
+        foreach($messages as $field => $error) {
+            $pieces = explode(self::VALIDATOR_DELIMITER, $field);
+            switch(count($pieces)) {
+                case 1:
+                    $this->defaultMessagesTemplate[$pieces[0]] = $error;
+                    break;
+                case 2:
+                    $this->customMessages[$pieces[0]][$pieces[1]] = $error;
+                    break;
+            }
+        }
         return $this;
     }
 
@@ -182,30 +207,22 @@ class Validator extends ValidatorHeader implements ValidatorInterface
     // 组装用户自定义消息
     protected function assembleCustomMessage($args)
     {
-        $message = str_replace(':field', $this->field, $this->defaultMessagesTemplate[$this->getValidatorName()][self::VALIDATOR_MESSAGE_LABEL]);
+        if (!empty($this->customMessages[$this->field])) {
+            $code = $this->customMessages[$this->field][$this->getValidatorName()][self::VALIDATOR_CODE_LABEL];
+            $message = $this->customMessages[$this->field][$this->getValidatorName()][self::VALIDATOR_MESSAGE_LABEL];
+        } else {
+            $code = $this->defaultMessagesTemplate[$this->getValidatorName()][self::VALIDATOR_CODE_LABEL];
+            $message = $this->defaultMessagesTemplate[$this->getValidatorName()][self::VALIDATOR_MESSAGE_LABEL];
+        }
+        $message = str_replace(':field', $this->field, $message);
         $reflection = new ReflectionMethod(get_class($this), $this->validatorName);
         $parameters = $reflection->getParameters();
         foreach ($parameters as $index => $parameter) {
             $message = str_replace(':' . $parameter->getName(), !is_scalar($args[$index]) ? var_export($args[$index], true) : $args[$index], $message);
         }
         $error = clone $this->error;
-        $error->set($this->defaultMessagesTemplate[$this->getValidatorName()][self::VALIDATOR_CODE_LABEL], $message);
+        $error->set($code, $message);
         $this->errors->push($this->field, $error);
         $this->fail = $this->fail || true;
-    }
-
-    public function fails()
-    {
-        return $this->fail;
-    }
-
-    public function errors()
-    {
-        return $this->errors;
-    }
-
-    public function getData()
-    {
-        return $this->cacheData;
     }
 }
