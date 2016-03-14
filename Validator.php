@@ -171,6 +171,7 @@ class Validator extends ValidatorHeader implements ValidatorInterface, Validator
         }
         $errorObject = clone $this->errorObject;
         $errorObject->set($this->defaultMessagesTemplate[$this->getValidatorName()][self::VALIDATOR_CODE_LABEL], $message);
+        array_merge($this->errors, $errorObject);
     }
 
     // 自定义消息
