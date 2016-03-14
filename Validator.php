@@ -6,7 +6,6 @@ use Bileji\Validator\Errors\Error;
 use Bileji\Validator\Errors\ValidatorErrors;
 use Bileji\Validator\Exception\ValidatorException;
 use Bileji\Validator\Interfaces\ValidatorInterface;
-use stdClass;
 
 class Validator extends ValidatorHeader implements ValidatorInterface
 {
@@ -54,14 +53,21 @@ class Validator extends ValidatorHeader implements ValidatorInterface
         return $syntax = implode(self::HIERARCHY_DELIMITER, $pieces);
     }
 
+    // 自定义消息
+    public function withMessage(array $messages)
+    {
+        array_merge_recursive($this->defaultMessagesTemplate, $messages);
+        return $this;
+    }
+
     // 调取验证器
     protected function callValidator($validator, $args, $syntax)
     {
         if (method_exists($this, $this->setValidatorName($validator))) {
             $value = call_user_func_array([$this, $this->setValidatorName($validator)], $args);
             # 结果为空的数据视为不通过验证
-            if (!empty($value) || $value instanceof stdClass) {
-                if (!$value instanceof stdClass) {
+            if (!empty($value)) {
+                if (!is_null($value)) {
                     $this->reverse(explode(self::HIERARCHY_DELIMITER, $syntax), $value, '$this->cacheData', $this->cacheData);
                 }
             } else {
@@ -131,7 +137,7 @@ class Validator extends ValidatorHeader implements ValidatorInterface
             if (isset($rules[self::LIST_ARRAY_MARK])) {
                 $rules = current($rules);
             }
-            if (!$value instanceof stdClass) {
+            if (!$value != self::PARAM_NULL) {
                 if (preg_match('/^\d*$/', implode('', array_keys($value)))) {
                     foreach($value as $n => $one) {
                         $this->syntaxPush($syntax, $n);
@@ -140,22 +146,18 @@ class Validator extends ValidatorHeader implements ValidatorInterface
                             if (isset($one[$k])) {
                                 $this->mapValidator($one[$k], $item, $syntax);
                             } else {
-                                $this->mapValidator(new stdClass(), $item, $syntax);
+                                $this->mapValidator(self::PARAM_NULL, $item, $syntax);
                             }
                         });
                         $this->syntaxPop($syntax);
                     }
                 } else {
-                    $this->mapValidator(new stdClass(), $rules, $syntax);
+                    $this->mapValidator(self::PARAM_NULL, $rules, $syntax);
                 }
             } else {
                 foreach ($rules as $k => $v) {
                     $this->syntaxPush($syntax, $k);
-//                    if (isset($value[$k])) {
-//                        $this->mapValidator($value[$k], $v, $syntax);
-//                    } else {
-                        $this->mapValidator(new stdClass(), $v, $syntax);
-//                    }
+                    $this->mapValidator(self::PARAM_NULL, $v, $syntax);
                     $this->syntaxPop($syntax);
                 }
             }
@@ -191,13 +193,6 @@ class Validator extends ValidatorHeader implements ValidatorInterface
         $this->fail = $this->fail || true;
     }
 
-    // 自定义消息
-    public function withMessage(array $messages)
-    {
-        array_merge_recursive($this->defaultMessagesTemplate, $messages);
-        return $this;
-    }
-
     public function fails()
     {
         return $this->fail;
@@ -206,5 +201,10 @@ class Validator extends ValidatorHeader implements ValidatorInterface
     public function errors()
     {
         return $this->errors;
+    }
+
+    public function getData()
+    {
+        return $this->cacheData;
     }
 }

@@ -4,6 +4,8 @@ namespace Bileji\Validator;
 
 abstract class ValidatorHeader
 {
+    const PARAM_NULL = null;
+
     const LIST_ARRAY_MARK = '_';
 
     const VALIDATOR_ARGS = 'args';
