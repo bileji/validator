@@ -11,6 +11,7 @@ class Validator extends ValidatorHeader implements ValidatorInterface
 {
     public function __construct()
     {
+        $this->fail = false;
         if (!$this->error instanceof Error) {
             $this->error = new Error();
         }
