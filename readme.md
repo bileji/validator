@@ -72,3 +72,63 @@ array(4) {
   }
 }
 ```
+
+## Validator
+
+    map
+    
+    list
+    
+    string
+    
+    numeric
+    
+    float
+    
+    required
+    
+    between:1,3
+    
+    url
+    
+    email
+    
+    phone
+    
+    chinese
+    
+    regex
+    
+    before:time
+    
+    after:time
+    
+    enum:enum
+    
+## Error
+
+```php
+$validator->withMessage([
+    'fruit|required' => ":field的名字不能为空"
+])->execute([
+    "fruit" => "apple",
+    "attribute" => [
+        [
+            "price" => 5,
+            "time" => "2016-03-14 12:00:00"
+        ],
+        [
+            "price" => 4,
+            "time" => "2016-03-15 12:00:00"
+        ]
+    ],
+    "email" => "shuc324@gmail.com",
+    "colors" => ["color1" => "red", "color2" => "green"]
+], [
+    "fruit" => "required|string",
+    "attribute._.price" => "required|numeric",
+    "attribute._.time" => "required|string",
+    "email" => "email",
+    "colors" => "required|map"
+]);
+```
