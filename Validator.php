@@ -3,11 +3,11 @@ namespace Bileji\Validator;
 
 use ReflectionMethod;
 use Bileji\Validator\Errors\Error;
+use Bileji\Validator\Errors\ValidatorErrors;
 use Bileji\Validator\Exception\ValidatorException;
 use Bileji\Validator\Interfaces\ValidatorInterface;
-use Bileji\Validator\Interfaces\ValidatorErrorsInterface;
 
-class Validator extends ValidatorHeader implements ValidatorInterface, ValidatorErrorsInterface
+class Validator extends ValidatorHeader implements ValidatorInterface
 {
     // 反向构造数据
     protected function reverse(array $keys, $value, $eval = '$map', $map = [])
@@ -166,15 +166,16 @@ class Validator extends ValidatorHeader implements ValidatorInterface, Validator
         foreach ($parameters as $index => $parameter) {
             $message = str_replace(':' . $parameter->getName(), !is_scalar($args[$index]) ? var_export($args[$index], true) : $args[$index], $message);
         }
-        if (!$this->errorObject instanceof Error) {
-            $this->errorObject = new Error();
+        if (!$this->errors instanceof ValidatorErrors) {
+            $this->errors = new ValidatorErrors();
         }
-        $errorObject = clone $this->errorObject;
-        $errorObject->set($this->defaultMessagesTemplate[$this->getValidatorName()][self::VALIDATOR_CODE_LABEL], $message);
-        if (empty($this->errors[$this->field])) {
-            $this->errors[$this->field] = [];
+        if (!$this->error instanceof Error) {
+            $this->error = new Error();
         }
-        array_push($this->errors[$this->field], $errorObject);
+        $error = clone $this->error;
+        $error->set($this->defaultMessagesTemplate[$this->getValidatorName()][self::VALIDATOR_CODE_LABEL], $message);
+        $this->errors->push($this->field, $error);
+        $this->fail = $this->fail || true;
     }
 
     // 自定义消息
@@ -184,31 +185,13 @@ class Validator extends ValidatorHeader implements ValidatorInterface, Validator
         return $this;
     }
 
-    public function all()
+    public function fails()
+    {
+        return $this->fail;
+    }
+
+    public function errors()
     {
         return $this->errors;
-    }
-
-    public function first()
-    {
-        return array_shift(array_shift($this->errors));
-    }
-
-    public function get($field)
-    {
-        return $this->errors[$field];
-    }
-
-    public function has($field)
-    {
-        return empty($this->errors[$field]);
-    }
-
-    public function push($field, Error $error)
-    {
-        if (empty($this->errors[$field])) {
-            $this->errors[$field] = [];
-        }
-        return array_push($this->errors[$field], $error);
     }
 }

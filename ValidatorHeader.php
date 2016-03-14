@@ -26,13 +26,15 @@ abstract class ValidatorHeader
 
     const VALIDATOR_OF_PARAMETERS_DELIMITER = ':';
 
+    protected $error;
+
     protected $field;
+
+    protected $errors;
 
     protected $rules = [];
 
-    protected $errors = [];
-
-    protected $errorObject;
+    protected $fail = false;
 
     protected $cacheData = [];
 
