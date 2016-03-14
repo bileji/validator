@@ -63,40 +63,44 @@ abstract class ValidatorHeader
             self::VALIDATOR_CODE_LABEL => -50004,
             self::VALIDATOR_MESSAGE_LABEL => '字段:field的值:value不为整型'
         ],
-        'required' => [
+        'float' => [
             self::VALIDATOR_CODE_LABEL => -50005,
+            self::VALIDATOR_MESSAGE_LABEL => '字段:field的值:value不为浮点型'
+        ],
+        'required' => [
+            self::VALIDATOR_CODE_LABEL => -50006,
             self::VALIDATOR_MESSAGE_LABEL => '字段:field为必填字段'
         ],
         'between' => [
-            self::VALIDATOR_CODE_LABEL => -50006,
+            self::VALIDATOR_CODE_LABEL => -50007,
             self::VALIDATOR_MESSAGE_LABEL => '字段:field的值:value必须介于:min-:max之间'
         ],
         'url' => [
-            self::VALIDATOR_CODE_LABEL => -50007,
+            self::VALIDATOR_CODE_LABEL => -50008,
             self::VALIDATOR_MESSAGE_LABEL => '字段:field的值:value不是正确的url格式'
         ],
         'email' => [
-            self::VALIDATOR_CODE_LABEL => -50008,
+            self::VALIDATOR_CODE_LABEL => -50009,
             self::VALIDATOR_MESSAGE_LABEL => '字段:field的值:value不符合邮箱格式'
         ],
         'phone' => [
-            self::VALIDATOR_CODE_LABEL => -50009,
+            self::VALIDATOR_CODE_LABEL => -50010,
             self::VALIDATOR_MESSAGE_LABEL => '字段:field的值:value不符合手机号格式'
         ],
         'chinese' => [
-            self::VALIDATOR_CODE_LABEL => -50009,
+            self::VALIDATOR_CODE_LABEL => -50011,
             self::VALIDATOR_MESSAGE_LABEL => '字段:field的值:value不符合中文格式'
         ],
         'regex' => [
-            self::VALIDATOR_CODE_LABEL => -50010,
+            self::VALIDATOR_CODE_LABEL => -50012,
             self::VALIDATOR_MESSAGE_LABEL => '字段:field的值:value不符合:regex格式'
         ],
         'before' => [
-            self::VALIDATOR_CODE_LABEL => -50011,
+            self::VALIDATOR_CODE_LABEL => -50013,
             self::VALIDATOR_MESSAGE_LABEL => '字段:field的值:value不在:time之前'
         ],
         'after' => [
-            self::VALIDATOR_CODE_LABEL => -50012,
+            self::VALIDATOR_CODE_LABEL => -50014,
             self::VALIDATOR_MESSAGE_LABEL => '字段:field的值:value不在:time之后'
         ],
         'enum' => [
@@ -123,6 +127,11 @@ abstract class ValidatorHeader
     protected function validatorNumeric($value)
     {
         return is_numeric($value) ? $value : null;
+    }
+
+    protected function validatorFloat($value)
+    {
+        return is_float($value) ? $value : null;
     }
 
     protected function validatorRequired($value)
@@ -177,6 +186,10 @@ abstract class ValidatorHeader
 
     protected function validatorEnum($value, $enum)
     {
-        return in_array($value, explode('-', $enum)) ? $value : null;
+        $enum = explode('-', $enum);
+        foreach($enum as $item) {
+            $enum[] = intval($item);
+        }
+        return in_array($value, $enum) ? $value : null;
     }
 }
