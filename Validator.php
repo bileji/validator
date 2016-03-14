@@ -25,7 +25,14 @@ class Validator extends ValidatorHeader implements ValidatorInterface
         array_map(function ($key) use (&$eval) {
             $eval .= '[\'' . (is_numeric($key) ? intval($key) : $key) . '\']';
         }, $keys);
-        eval($eval . '=' . (empty($value) ? '[]' : '\'' . $value . '\'') . ';');
+        if (empty($value)) {
+            $value = '[]';
+        } else if (is_array($value)) {
+            $value = 'json_decode(\'' . json_encode($value) . '\', true)';
+        } else {
+            $value = '\'' . $value . '\'';
+        }
+        eval($eval . '=' . $value . ';');
         return $map;
     }
 
@@ -67,11 +74,11 @@ class Validator extends ValidatorHeader implements ValidatorInterface
             $value = call_user_func_array([$this, $this->setValidatorName($validator)], $args);
             # 结果为空的数据视为不通过验证
             if (!empty($value)) {
-                if (!is_null($value)) {
-                    $this->reverse(explode(self::HIERARCHY_DELIMITER, $syntax), $value, '$this->cacheData', $this->cacheData);
-                }
+                $this->reverse(explode(self::HIERARCHY_DELIMITER, $syntax), $value, '$this->cacheData', $this->cacheData);
             } else {
-                $this->assembleCustomMessage($args);
+                if (!(empty($args[0]) && is_null($args[0]) && is_null($value))) {
+                    $this->assembleCustomMessage($args);
+                }
             }
         } else {
             throw new ValidatorException('验证器' . $validator . '缺失');
@@ -137,7 +144,7 @@ class Validator extends ValidatorHeader implements ValidatorInterface
             if (isset($rules[self::LIST_ARRAY_MARK])) {
                 $rules = current($rules);
             }
-            if (!$value != self::PARAM_NULL) {
+            if ($value != self::PARAM_NULL) {
                 if (preg_match('/^\d*$/', implode('', array_keys($value)))) {
                     foreach($value as $n => $one) {
                         $this->syntaxPush($syntax, $n);
@@ -180,12 +187,6 @@ class Validator extends ValidatorHeader implements ValidatorInterface
         $parameters = $reflection->getParameters();
         foreach ($parameters as $index => $parameter) {
             $message = str_replace(':' . $parameter->getName(), !is_scalar($args[$index]) ? var_export($args[$index], true) : $args[$index], $message);
-        }
-        if (!$this->errors instanceof ValidatorErrors) {
-            $this->errors = new ValidatorErrors();
-        }
-        if (!$this->error instanceof Error) {
-            $this->error = new Error();
         }
         $error = clone $this->error;
         $error->set($this->defaultMessagesTemplate[$this->getValidatorName()][self::VALIDATOR_CODE_LABEL], $message);
