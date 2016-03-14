@@ -1,6 +1,6 @@
 {
     "name": "bileji/validator",
-    "description": "data validator",
+    "description": "deep level data validator",
     "type": "library",
     "license": "MIT",
     "keywords": [
