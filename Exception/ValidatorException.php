@@ -1,6 +1,6 @@
 <?php
 
-namespace Bileji\Validator;
+namespace Bileji\Validator\Exception;
 
 use Exception;
 

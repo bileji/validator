@@ -8,27 +8,31 @@ abstract class ValidatorHeader
 
     const LIST_ARRAY_MARK = '_';
 
+    const VALIDATOR_ARGS = 'args';
+
     const VALIDATOR_DELIMITER = '|';
 
     const HIERARCHY_DELIMITER = '.';
 
     const PARAMETERS_DELIMITER = ',';
 
-    const VALIDATOR_OF_PARAMETERS_DELIMITER = ':';
-
-    const VALIDATOR_ARGS = 'args';
-
     const VALIDATOR_SYNTAX = 'syntax';
-
-    const VALIDATOR_CONTAINER = 'validator';
 
     const VALIDATOR_CODE_LABEL = 'code';
 
+    const VALIDATOR_CONTAINER = 'validator';
+
     const VALIDATOR_MESSAGE_LABEL = 'message';
+
+    const VALIDATOR_OF_PARAMETERS_DELIMITER = ':';
 
     protected $field;
 
     protected $rules = [];
+
+    protected $errors = [];
+
+    protected $errorObject;
 
     protected $cacheData = [];
 
@@ -58,4 +62,29 @@ abstract class ValidatorHeader
             self::VALIDATOR_MESSAGE_LABEL => '字段:field为必填字段'
         ],
     ];
+
+    protected function validatorMap($value)
+    {
+        return is_array($value) && !preg_match('/^\d*$/', implode('', array_keys($value))) ? $value : null;
+    }
+
+    protected function validatorList($value)
+    {
+        return is_array($value) && preg_match('/^\d*$/', implode('', array_keys($value))) ? $value : null;
+    }
+
+    protected function validatorString($value)
+    {
+        return is_string($value) ? $value : null;
+    }
+
+    protected function validatorNumeric($value)
+    {
+        return is_numeric($value) ? $value : null;
+    }
+
+    protected function validatorRequired($value)
+    {
+        return !empty($value) ? $value : null;
+    }
 }
