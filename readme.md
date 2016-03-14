@@ -87,7 +87,7 @@ array(4) {
     
     required
     
-    between:1,3
+    between:min,max
     
     url
     
@@ -105,7 +105,7 @@ array(4) {
     
     enum:enum
     
-## Error
+## Custom error message
 
 ```php
 $validator->withMessage([
