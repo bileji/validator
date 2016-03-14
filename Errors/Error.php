@@ -1,6 +1,6 @@
 <?php
 
-namespace Bileji\Validator\Error;
+namespace Bileji\Validator\Errors;
 
 use Bileji\Validator\Interfaces\ErrorInterface;
 

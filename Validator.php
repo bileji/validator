@@ -1,10 +1,10 @@
 <?php
 namespace Bileji\Validator;
 
-use Bileji\Validator\Interfaces\ValidatorInterface;
 use ReflectionMethod;
-use Bileji\Validator\Error\Error;
+use Bileji\Validator\Errors\Error;
 use Bileji\Validator\Exception\ValidatorException;
+use Bileji\Validator\Interfaces\ValidatorInterface;
 use Bileji\Validator\Interfaces\ValidatorErrorsInterface;
 
 class Validator extends ValidatorHeader implements ValidatorInterface, ValidatorErrorsInterface
@@ -166,12 +166,15 @@ class Validator extends ValidatorHeader implements ValidatorInterface, Validator
         foreach ($parameters as $index => $parameter) {
             $message = str_replace(':' . $parameter->getName(), !is_scalar($args[$index]) ? var_export($args[$index], true) : $args[$index], $message);
         }
-        if ($this->errorObject instanceof Error) {
+        if (!$this->errorObject instanceof Error) {
             $this->errorObject = new Error();
         }
         $errorObject = clone $this->errorObject;
         $errorObject->set($this->defaultMessagesTemplate[$this->getValidatorName()][self::VALIDATOR_CODE_LABEL], $message);
-        array_merge($this->errors, $errorObject);
+        if (empty($this->errors[$this->field])) {
+            $this->errors[$this->field] = [];
+        }
+        array_push($this->errors[$this->field], $errorObject);
     }
 
     // 自定义消息

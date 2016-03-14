@@ -2,7 +2,7 @@
 
 namespace Bileji\Validator\Interfaces;
 
-use Bileji\Validator\Error\Error;
+use Bileji\Validator\Errors\Error;
 
 interface ValidatorErrorsInterface
 {
