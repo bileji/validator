@@ -9,6 +9,16 @@ use Bileji\Validator\Interfaces\ValidatorInterface;
 
 class Validator extends ValidatorHeader implements ValidatorInterface
 {
+    public function __construct()
+    {
+        if (!$this->error instanceof Error) {
+            $this->error = new Error();
+        }
+        if (!$this->errors instanceof ValidatorErrors) {
+            $this->errors = new ValidatorErrors();
+        }
+    }
+
     // 反向构造数据
     protected function reverse(array $keys, $value, $eval = '$map', $map = [])
     {
