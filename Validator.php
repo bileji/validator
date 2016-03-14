@@ -6,6 +6,7 @@ use Bileji\Validator\Errors\Error;
 use Bileji\Validator\Errors\ValidatorErrors;
 use Bileji\Validator\Exception\ValidatorException;
 use Bileji\Validator\Interfaces\ValidatorInterface;
+use stdClass;
 
 class Validator extends ValidatorHeader implements ValidatorInterface
 {
@@ -59,8 +60,10 @@ class Validator extends ValidatorHeader implements ValidatorInterface
         if (method_exists($this, $this->setValidatorName($validator))) {
             $value = call_user_func_array([$this, $this->setValidatorName($validator)], $args);
             # 结果为空的数据视为不通过验证
-            if (!empty($value)) {
-                $this->reverse(explode(self::HIERARCHY_DELIMITER, $syntax), $value, '$this->cacheData', $this->cacheData);
+            if (!empty($value) || $value instanceof stdClass) {
+                if (!$value instanceof stdClass) {
+                    $this->reverse(explode(self::HIERARCHY_DELIMITER, $syntax), $value, '$this->cacheData', $this->cacheData);
+                }
             } else {
                 $this->assembleCustomMessage($args);
             }
@@ -128,7 +131,7 @@ class Validator extends ValidatorHeader implements ValidatorInterface
             if (isset($rules[self::LIST_ARRAY_MARK])) {
                 $rules = current($rules);
             }
-            if ($value != self::PARAM_NULL) {
+            if (!$value instanceof stdClass) {
                 if (preg_match('/^\d*$/', implode('', array_keys($value)))) {
                     foreach($value as $n => $one) {
                         $this->syntaxPush($syntax, $n);
@@ -137,13 +140,13 @@ class Validator extends ValidatorHeader implements ValidatorInterface
                             if (isset($one[$k])) {
                                 $this->mapValidator($one[$k], $item, $syntax);
                             } else {
-                                $this->mapValidator(self::PARAM_NULL, $item, $syntax);
+                                $this->mapValidator(new stdClass(), $item, $syntax);
                             }
                         });
                         $this->syntaxPop($syntax);
                     }
                 } else {
-                    $this->mapValidator(self::PARAM_NULL, $rules, $syntax);
+                    $this->mapValidator(new stdClass(), $rules, $syntax);
                 }
             } else {
                 foreach ($rules as $k => $v) {
@@ -151,7 +154,7 @@ class Validator extends ValidatorHeader implements ValidatorInterface
                     if (isset($value[$k])) {
                         $this->mapValidator($value[$k], $v, $syntax);
                     } else {
-                        $this->mapValidator(self::PARAM_NULL, $v, $syntax);
+                        $this->mapValidator(new stdClass(), $v, $syntax);
                     }
                     $this->syntaxPop($syntax);
                 }
