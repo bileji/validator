@@ -192,7 +192,11 @@ class Validator extends ValidatorHeader implements ValidatorInterface
                         $this->syntaxPop($syntax);
                     }
                 } else {
-                    $this->mapValidator(self::PARAM_NULL, $rules, $syntax);
+                    foreach($value as $k => $v) {
+                        if (isset($rules[$k])) {
+                            $this->mapValidator($v, $rules[$k], $syntax . self::HIERARCHY_DELIMITER . $k);
+                        }
+                    }
                 }
             } else {
                 foreach ($rules as $k => $v) {
@@ -204,6 +208,7 @@ class Validator extends ValidatorHeader implements ValidatorInterface
         } else if (isset($rules[self::VALIDATOR_CONTAINER])) {
             foreach ($rules[self::VALIDATOR_CONTAINER] as $validator => $args) {
                 $this->field = is_array($rules[self::VALIDATOR_SYNTAX]) ? array_shift($rules[self::VALIDATOR_SYNTAX]) : $rules[self::VALIDATOR_SYNTAX];
+                $args = is_array($args) ? $args : [$args];
                 array_unshift($args, $value);
                 $this->callValidator($validator, $args, $syntax);
             }

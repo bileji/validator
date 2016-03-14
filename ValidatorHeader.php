@@ -75,7 +75,7 @@ abstract class ValidatorHeader
             self::VALIDATOR_CODE_LABEL => -50007,
             self::VALIDATOR_MESSAGE_LABEL => '字段:field的值:value不是正确的url格式'
         ],
-        'mail' => [
+        'email' => [
             self::VALIDATOR_CODE_LABEL => -50008,
             self::VALIDATOR_MESSAGE_LABEL => '字段:field的值:value不符合邮箱格式'
         ],
