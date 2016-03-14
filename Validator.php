@@ -151,11 +151,11 @@ class Validator extends ValidatorHeader implements ValidatorInterface
             } else {
                 foreach ($rules as $k => $v) {
                     $this->syntaxPush($syntax, $k);
-                    if (isset($value[$k])) {
-                        $this->mapValidator($value[$k], $v, $syntax);
-                    } else {
+//                    if (isset($value[$k])) {
+//                        $this->mapValidator($value[$k], $v, $syntax);
+//                    } else {
                         $this->mapValidator(new stdClass(), $v, $syntax);
-                    }
+//                    }
                     $this->syntaxPop($syntax);
                 }
             }
