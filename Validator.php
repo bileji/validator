@@ -73,10 +73,10 @@ class Validator extends ValidatorHeader implements ValidatorInterface
         if (method_exists($this, $this->setValidatorName($validator))) {
             $value = call_user_func_array([$this, $this->setValidatorName($validator)], $args);
             # 结果为空的数据视为不通过验证
-            if (!empty($value)) {
+            if (!empty($value) && $value != self::VALIDATOR_BREAK_MD5) {
                 $this->reverse(explode(self::HIERARCHY_DELIMITER, $syntax), $value, '$this->cacheData', $this->cacheData);
             } else {
-                if (!(empty($args[0]) && is_null($args[0]) && is_null($value))) {
+                if (!(empty($args[0]) && is_null($args[0]) && is_null($value)) || $value == self::VALIDATOR_BREAK_MD5) {
                     $this->assembleCustomMessage($args);
                 }
             }

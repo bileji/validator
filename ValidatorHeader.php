@@ -26,6 +26,8 @@ abstract class ValidatorHeader
 
     const VALIDATOR_OF_PARAMETERS_DELIMITER = ':';
 
+    const VALIDATOR_BREAK_MD5 = '7682a8b943f68c0372da27eeeb413537';
+
     protected $error;
 
     protected $field;
@@ -87,6 +89,6 @@ abstract class ValidatorHeader
 
     protected function validatorRequired($value)
     {
-        return !empty($value) ? $value : null;
+        return !empty($value) ? $value : self::VALIDATOR_BREAK_MD5;
     }
 }
