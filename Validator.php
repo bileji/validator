@@ -82,10 +82,10 @@ class Validator extends ValidatorHeader implements ValidatorInterface
             $pieces = explode(self::VALIDATOR_DELIMITER, $field);
             switch(count($pieces)) {
                 case 1:
-                    $this->defaultMessagesTemplate[$pieces[0]] = $error;
+                    $this->defaultMessagesTemplate[$pieces[0]] = array_replace($this->defaultMessagesTemplate[$pieces[0]] , $error);
                     break;
                 case 2:
-                    $this->customMessages[$pieces[0]][$pieces[1]] = $error;
+                    $this->customMessages[$pieces[0]][$pieces[1]] = array_replace($this->customMessages[$pieces[0]][$pieces[1]] , $error);
                     break;
             }
         }
