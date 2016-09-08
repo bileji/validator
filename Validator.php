@@ -36,20 +36,23 @@ class Validator extends ValidatorHeader implements ValidatorInterface
     }
 
     // 反向构造数据
-    protected function reverse(array $keys, $value, $eval = '$map', $map = [])
+    protected function reverse($key, $value, &$array = [])
     {
-        array_map(function ($key) use (&$eval) {
-            $eval .= '[\'' . (is_numeric($key) ? intval($key) : $key) . '\']';
-        }, $keys);
-        if (empty($value)) {
-            $value = '[]';
-        } else if (is_array($value)) {
-            $value = 'json_decode(\'' . json_encode($value) . '\', true)';
+        if (strpos($key, static::HIERARCHY_DELIMITER) === false) {
+            $array[$key] = $value;
         } else {
-            $value = '\'' . $value . '\'';
+            $keys = explode(static::HIERARCHY_DELIMITER, $key);
+            $optTree = &$array;
+            while ($key = array_shift($keys)) {
+                if (!empty($keys)) {
+                    (!isset($optTree[$key]) || !is_array($optTree[$key])) && $optTree[$key] = [];
+                    $optTree = &$optTree[$key];
+                } else {
+                    $optTree[$key] = $value;
+                }
+            }
         }
-        eval($eval . '=' . $value . ';');
-        return $map;
+        return $array;
     }
 
     // 设置验证器名称
@@ -79,14 +82,14 @@ class Validator extends ValidatorHeader implements ValidatorInterface
     // 自定义消息
     public function withMessage(array $messages)
     {
-        foreach($messages as $field => $error) {
+        foreach ($messages as $field => $error) {
             $pieces = explode(self::VALIDATOR_DELIMITER, $field);
-            switch(count($pieces)) {
+            switch (count($pieces)) {
                 case 1:
                     if (is_string($error)) {
                         $this->defaultMessagesTemplate[$pieces[0]][self::VALIDATOR_MESSAGE_LABEL] = $error;
                     } else {
-                        $this->defaultMessagesTemplate[$pieces[0]] = array_replace($this->defaultMessagesTemplate[$pieces[0]] , $error);
+                        $this->defaultMessagesTemplate[$pieces[0]] = array_replace($this->defaultMessagesTemplate[$pieces[0]], $error);
                     }
                     break;
                 case 2:
@@ -108,7 +111,7 @@ class Validator extends ValidatorHeader implements ValidatorInterface
             $value = call_user_func_array([$this, $this->setValidatorName($validator)], $args);
             # 结果为空的数据视为不通过验证
             if (!empty($value) && $value != self::VALIDATOR_BREAK_MD5) {
-                $this->reverse(explode(self::HIERARCHY_DELIMITER, $syntax), $value, '$this->cacheData', $this->cacheData);
+                $this->cacheData = $this->reverse($syntax, $value);
             } else {
                 if (!(empty($args[0]) && is_null($args[0]) && is_null($value)) || $value == self::VALIDATOR_BREAK_MD5) {
                     $this->assembleCustomMessage($args);
@@ -127,8 +130,8 @@ class Validator extends ValidatorHeader implements ValidatorInterface
             array_map(function ($validator) use ($field) {
                 $validatorAndParameters = explode(self::VALIDATOR_OF_PARAMETERS_DELIMITER, $validator);
                 if (strpos($field, self::HIERARCHY_DELIMITER) !== false) {
-                    $rule = $this->reverse(explode(self::HIERARCHY_DELIMITER, $field . self::HIERARCHY_DELIMITER . self::VALIDATOR_CONTAINER . self::HIERARCHY_DELIMITER . array_shift($validatorAndParameters)), array_pop($validatorAndParameters));
-                    $syntax = $this->reverse(explode(self::HIERARCHY_DELIMITER, $field . self::HIERARCHY_DELIMITER . self::VALIDATOR_SYNTAX), $field);
+                    $rule = $this->reverse($field . self::HIERARCHY_DELIMITER . self::VALIDATOR_CONTAINER . self::HIERARCHY_DELIMITER . array_shift($validatorAndParameters), array_pop($validatorAndParameters));
+                    $syntax = $this->reverse($field . self::HIERARCHY_DELIMITER . self::VALIDATOR_SYNTAX, $field);
                     $this->rules = array_merge_recursive($this->rules, $rule, $syntax);
                 } else {
                     $this->rules[$field][self::VALIDATOR_CONTAINER][array_shift($validatorAndParameters)] = explode(self::PARAMETERS_DELIMITER, array_pop($validatorAndParameters));
@@ -180,7 +183,7 @@ class Validator extends ValidatorHeader implements ValidatorInterface
             }
             if ($value != self::PARAM_NULL) {
                 if (preg_match('/^\d*$/', implode('', array_keys($value)))) {
-                    foreach($value as $n => $one) {
+                    foreach ($value as $n => $one) {
                         $this->syntaxPush($syntax, $n);
                         array_walk($rules, function ($item, $k) use ($one, $syntax) {
                             $this->syntaxPush($syntax, $k);
@@ -193,7 +196,7 @@ class Validator extends ValidatorHeader implements ValidatorInterface
                         $this->syntaxPop($syntax);
                     }
                 } else {
-                    foreach($value as $k => $v) {
+                    foreach ($value as $k => $v) {
                         if (isset($rules[$k])) {
                             $this->mapValidator($v, $rules[$k], $syntax . self::HIERARCHY_DELIMITER . $k);
                         }
