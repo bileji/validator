@@ -38,7 +38,7 @@ $validator->execute([
 if ($validator->fails()) {
     $validator->errors()->first();
 } else {
-    var_dump($validator->getData();
+    var_dump($validator->getData());
 }
 
 array(4) {
