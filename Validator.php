@@ -43,7 +43,7 @@ class Validator extends ValidatorHeader implements ValidatorInterface
         } else {
             $keys = explode(static::HIERARCHY_DELIMITER, $key);
             $optTree = &$array;
-            while ($key = array_shift($keys)) {
+            while (!is_null($key = array_shift($keys))) {
                 if (!empty($keys)) {
                     (!isset($optTree[$key]) || !is_array($optTree[$key])) && $optTree[$key] = [];
                     $optTree = &$optTree[$key];
@@ -111,7 +111,7 @@ class Validator extends ValidatorHeader implements ValidatorInterface
             $value = call_user_func_array([$this, $this->setValidatorName($validator)], $args);
             # 结果为空的数据视为不通过验证
             if (!empty($value) && $value != self::VALIDATOR_BREAK_MD5) {
-                $this->cacheData = $this->reverse($syntax, $value);
+                $this->reverse($syntax, $value, $this->cacheData);
             } else {
                 if (!(empty($args[0]) && is_null($args[0]) && is_null($value)) || $value == self::VALIDATOR_BREAK_MD5) {
                     $this->assembleCustomMessage($args);
@@ -130,7 +130,7 @@ class Validator extends ValidatorHeader implements ValidatorInterface
             array_map(function ($validator) use ($field) {
                 $validatorAndParameters = explode(self::VALIDATOR_OF_PARAMETERS_DELIMITER, $validator);
                 if (strpos($field, self::HIERARCHY_DELIMITER) !== false) {
-                    $rule = $this->reverse($field . self::HIERARCHY_DELIMITER . self::VALIDATOR_CONTAINER . self::HIERARCHY_DELIMITER . array_shift($validatorAndParameters), array_pop($validatorAndParameters));
+                    $rule = $this->reverse($field . self::HIERARCHY_DELIMITER . self::VALIDATOR_CONTAINER . self::HIERARCHY_DELIMITER . array_shift($validatorAndParameters), count($validatorAndParameters) ? array_pop($validatorAndParameters) : []);
                     $syntax = $this->reverse($field . self::HIERARCHY_DELIMITER . self::VALIDATOR_SYNTAX, $field);
                     $this->rules = array_merge_recursive($this->rules, $rule, $syntax);
                 } else {
