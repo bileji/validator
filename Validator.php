@@ -144,6 +144,11 @@ class Validator extends ValidatorHeader implements ValidatorInterface
     public function execute(array $pendingData, array $expressions)
     {
         $this->parse($expressions);
+        
+        array_map(function ($field) use (&$pendingData) {
+            $pendingData[$field] = '';
+        }, array_diff(array_keys($this->rules), array_keys($pendingData)));
+        
         foreach ($pendingData as $field => $value) {
             if (empty($field)) {
                 throw new ValidatorException('语法错误');
