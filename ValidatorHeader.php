@@ -104,7 +104,7 @@ abstract class ValidatorHeader
             self::VALIDATOR_MESSAGE_LABEL => '字段:field的值:value不在:time之后'
         ],
         'enum' => [
-            self::VALIDATOR_CODE_LABEL => -50013,
+            self::VALIDATOR_CODE_LABEL => -50015,
             self::VALIDATOR_MESSAGE_LABEL => '字段:field的值:value不在枚举的值:enum之中'
         ],
     ];
