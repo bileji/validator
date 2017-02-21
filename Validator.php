@@ -139,14 +139,26 @@ class Validator extends ValidatorHeader implements ValidatorInterface
             }, $validators);
         });
     }
-
+    
+    protected static function RecAssign(array $data, $key, array &$some)
+    {
+        if (isset($data[self::VALIDATOR_CONTAINER])) {
+            $some[$key] = '';
+            return;
+        }
+        foreach ($data as $k => $v) {
+            empty($some[$key]) && $some[$key] = [];
+            static::RecAssign($v, $k, $some[$key]);
+        }
+    }
+    
     // 执行验证
     public function execute(array $pendingData, array $expressions)
     {
         $this->parse($expressions);
         
         array_map(function ($field) use (&$pendingData) {
-            $pendingData[$field] = '';
+            static::RecAssign($this->rules[$field], $field, $pendingData);
         }, array_diff(array_keys($this->rules), array_keys($pendingData)));
         
         foreach ($pendingData as $field => $value) {
