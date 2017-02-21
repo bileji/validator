@@ -150,7 +150,7 @@ class Validator extends ValidatorHeader implements ValidatorInterface
                 $item == static::LIST_ARRAY_MARK && $item = 0;
                 $tempV = empty($tempV[$item]) ? [] : $tempV[$item];
             }, explode(static::HIERARCHY_DELIMITER, $key));
-            empty($tempV) && $validator->reverse($key, '', $data);
+            empty($tempV) && $validator->reverse($key, null, $data);
         }, $keys);
     }
     
