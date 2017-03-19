@@ -38,6 +38,8 @@ class Validator extends ValidatorHeader implements ValidatorInterface
     // 反向构造数据
     protected function reverse($key, $value, &$array = [])
     {
+        //临时修复bug
+        strpos($value, static::PARAMETERS_DELIMITER) !== false && $value = explode(static::PARAMETERS_DELIMITER, $value);
         if (strpos($key, static::HIERARCHY_DELIMITER) === false) {
             $array[$key] = $value;
         } else {
