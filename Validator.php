@@ -112,7 +112,7 @@ class Validator extends ValidatorHeader implements ValidatorInterface
         if (method_exists($this, $this->setValidatorName($validator))) {
             $value = call_user_func_array([$this, $this->setValidatorName($validator)], $args);
             # 结果为空的数据视为不通过验证
-            if (!empty($value) && $value != self::VALIDATOR_BREAK_MD5) {
+            if (!is_null($value) && $value != self::VALIDATOR_BREAK_MD5) {
                 $this->reverse($syntax, $value, $this->cacheData);
             } else {
                 if (!(empty($args[0]) && is_null($args[0]) && is_null($value)) || $value == self::VALIDATOR_BREAK_MD5) {
@@ -150,9 +150,9 @@ class Validator extends ValidatorHeader implements ValidatorInterface
             $tempV = $data;
             array_map(function ($item) use (&$tempV, $data) {
                 $item == static::LIST_ARRAY_MARK && $item = 0;
-                $tempV = empty($tempV[$item]) ? [] : $tempV[$item];
+                $tempV = !isset($tempV[$item]) ? [] : $tempV[$item];
             }, explode(static::HIERARCHY_DELIMITER, $key));
-            empty($tempV) && $validator->reverse($key, null, $data);
+            empty($tempV) && is_array($tempV) && $validator->reverse($key, null, $data);
         }, $keys);
     }
     
