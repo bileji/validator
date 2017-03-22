@@ -38,8 +38,6 @@ class Validator extends ValidatorHeader implements ValidatorInterface
     // 反向构造数据
     protected function reverse($key, $value, &$array = [])
     {
-        //临时修复bug
-        strpos($value, static::PARAMETERS_DELIMITER) !== false && $value = explode(static::PARAMETERS_DELIMITER, $value);
         if (strpos($key, static::HIERARCHY_DELIMITER) === false) {
             $array[$key] = $value;
         } else {
@@ -132,7 +130,15 @@ class Validator extends ValidatorHeader implements ValidatorInterface
             array_map(function ($validator) use ($field) {
                 $validatorAndParameters = explode(self::VALIDATOR_OF_PARAMETERS_DELIMITER, $validator);
                 if (strpos($field, self::HIERARCHY_DELIMITER) !== false) {
-                    $rule = $this->reverse($field . self::HIERARCHY_DELIMITER . self::VALIDATOR_CONTAINER . self::HIERARCHY_DELIMITER . array_shift($validatorAndParameters), count($validatorAndParameters) ? array_pop($validatorAndParameters) : []);
+                    $validatorName = array_shift($validatorAndParameters);
+                    $params = [];
+                    if (count($validatorAndParameters)) {
+                        $params = array_pop($validatorAndParameters);
+                        if (is_string($params) && strpos($params, static::PARAMETERS_DELIMITER) !== false) {
+                            $params = explode(static::PARAMETERS_DELIMITER, $params);
+                        }
+                    }
+                    $rule = $this->reverse($field . self::HIERARCHY_DELIMITER . self::VALIDATOR_CONTAINER . self::HIERARCHY_DELIMITER . $validatorName, $params);
                     $syntax = $this->reverse($field . self::HIERARCHY_DELIMITER . self::VALIDATOR_SYNTAX, $field);
                     $this->rules = array_merge_recursive($this->rules, $rule, $syntax);
                 } else {
