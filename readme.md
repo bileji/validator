@@ -36,7 +36,7 @@ $validator->execute([
 ]);
 
 if ($validator->fails()) {
-    $validator->errors()->first();
+    $validator->errors()->first()->getMessage();
 } else {
     var_dump($validator->getData());
 }
